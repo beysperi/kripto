@@ -1,0 +1,211 @@
+
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kripto Takip - CoinGecko API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="min-h-screen">
+        <header class="bg-slate-800 py-6">
+            <div class="container mx-auto px-4">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <svg class="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                        </svg>
+                        <h1 class="text-2xl font-bold ml-2">Kripto Takip</h1>
+                    </div>
+                    <div class="hidden md:flex space-x-4">
+                        <button id="refreshButton" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition flex items-center">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Yenile
+                        </button>
+                        <select id="currencySelector" class="bg-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="usd">USD ($)</option>
+                            <option value="eur">EUR (€)</option>
+                            <option value="try">TRY (₺)</option>
+                        </select>
+                    </div>
+                    <button class="md:hidden text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container mx-auto px-4 py-8">
+            <!-- Loading Indicator -->
+            <div id="loadingIndicator" class="flex justify-center my-12">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden bg-red-500 text-white p-4 rounded-lg mb-8">
+                Veri yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.
+            </div>
+
+            <!-- Last Updated -->
+            <div id="lastUpdated" class="text-gray-400 text-sm mb-4 hidden">
+                Son güncelleme: <span id="updateTime"></span>
+            </div>
+
+            <!-- Top Coins Section -->
+            <div id="topCoinsSection" class="mb-8 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Popüler Kriptolar</h2>
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Kripto ara..." class="bg-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <svg class="w-5 h-5 text-gray-400 absolute right-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+
+                <div id="topCoins" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Coin cards will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Coins Table Section -->
+            <div id="coinsTableSection" class="bg-slate-800 rounded-xl p-6 shadow-lg mb-8 hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold">Tüm Kriptolar</h2>
+                    <div class="flex space-x-2">
+                        <button data-period="1h" class="period-button bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm">1s</button>
+                        <button data-period="24h" class="period-button bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">24s</button>
+                        <button data-period="7d" class="period-button bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm">7g</button>
+                        <button data-period="30d" class="period-button bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm">30g</button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-gray-400 border-b border-gray-700">
+                                <th class="pb-3">#</th>
+                                <th class="pb-3">İsim</th>
+                                <th class="pb-3">Fiyat</th>
+                                <th class="pb-3 sortable" data-sort="price_change_percentage_1h_in_currency">1s %</th>
+                                <th class="pb-3 sortable" data-sort="price_change_percentage_24h_in_currency">24s %</th>
+                                <th class="pb-3 sortable" data-sort="price_change_percentage_7d_in_currency">7g %</th>
+                                <th class="pb-3 sortable" data-sort="market_cap">Piyasa Değeri</th>
+                                <th class="pb-3 sortable" data-sort="total_volume">Hacim (24s)</th>
+                                <th class="pb-3">Son 7 Gün</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coinsTableBody">
+                            <!-- Coin rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Selected Coin Chart Section -->
+            <div id="selectedCoinSection" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-slate-800 rounded-xl p-6 shadow-lg">
+                        <div class="flex justify-between items-center mb-6">
+                            <div class="flex items-center">
+                                <img id="selectedCoinImage" src="" alt="" class="w-8 h-8 mr-2">
+                                <h2 id="selectedCoinName" class="text-xl font-bold">Bitcoin Fiyat Grafiği</h2>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button data-chart-period="1" class="chart-period-button bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">24s</button>
+                                <button data-chart-period="7" class="chart-period-button bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm">7g</button>
+                                <button data-chart-period="30" class="chart-period-button bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm">30g</button>
+                                <button data-chart-period="365" class="chart-period-button bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded-lg text-sm">1y</button>
+                            </div>
+                        </div>
+                        <div id="coinChartContainer" class="h-80 relative">
+                            <canvas id="coinChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div id="coinStats" class="bg-slate-800 rounded-xl p-6 shadow-lg">
+                        <h2 class="text-xl font-bold mb-6">Piyasa İstatistikleri</h2>
+                        <div class="space-y-4">
+                            <!-- Coin stats will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="bg-slate-800 py-8 mt-12">
+            <div class="container mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div>
+                        <div class="flex items-center mb-4">
+                            <svg class="w-8 h-8 text-blue-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"></path>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"></path>
+                            </svg>
+                            <h1 class="text-xl font-bold ml-2">Kripto Takip</h1>
+                        </div>
+                        <p class="text-gray-400 mb-4">CoinGecko API ile gerçek zamanlı kripto para takibi.</p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                                </svg>
+                            </a>
+                            <a href="#" class="text-gray-400 hover:text-white">
+                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Hızlı Erişim</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-white">Ana Sayfa</a></li>
+                            <li><a href="#" class="hover:text-white">Tüm Kriptolar</a></li>
+                            <li><a href="#" class="hover:text-white">Piyasa Değeri</a></li>
+                            <li><a href="#" class="hover:text-white">Trendler</a></li>
+                            <li><a href="#" class="hover:text-white">Yeni Listeler</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Hakkımızda</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-white">Şirket</a></li>
+                            <li><a href="#" class="hover:text-white">Kariyer</a></li>
+                            <li><a href="#" class="hover:text-white">Blog</a></li>
+                            <li><a href="#" class="hover:text-white">İletişim</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold mb-4">Yasal</h3>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="#" class="hover:text-white">Kullanım Şartları</a></li>
+                            <li><a href="#" class="hover:text-white">Gizlilik Politikası</a></li>
+                            <li><a href="#" class="hover:text-white">Risk Bildirimi</a></li>
+                            <li><a href="#" class="hover:text-white">Çerez Politikası</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+                    <p>Veriler <a href="https://www.coingecko.com/en/api" target="_blank" class="text-blue-400 hover:text-blue-300">CoinGecko API</a> tarafından sağlanmaktadır.</p>
+                    <p class="mt-2">&copy; © Beysperi. Tüm hakları saklıdır.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Chart.js for charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
